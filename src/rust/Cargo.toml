@@ -9,9 +9,11 @@ crate-type = [ 'staticlib' ]
 name = 'linkorgsonnx'
 
 [dependencies]
-extendr-api = {version='*'}
-ort = {version = "2.0.0-rc.5", features = [ "fetch-models" ] }
+extendr-api = {version='*', features = ['ndarray']}
+ort = {version = "=2.0.0-rc.4", features = [ "fetch-models" ] }
+ort-sys = {version = "=2.0.0-rc.4"}
+ndarray = "0.15"
 tracing-subscriber = { version = "0.3", default-features = false, features = [ "env-filter", "fmt" ] }
-ndarray = "0.16"
 tokenizers = { version = ">=0.13.4", default-features = false, features = [ "onig" ] }
 rand = "0.8"
+hnsw_rs = "0.3.0"

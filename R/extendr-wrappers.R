@@ -10,13 +10,13 @@
 #' @useDynLib linkorgsonnx, .registration = TRUE
 NULL
 
+hnsw_join <- function(a_mat, b_mat) .Call(wrap__hnsw_join, a_mat, b_mat)
+
 ORTSession <- new.env(parent = emptyenv())
 
-ORTSession$new_from_url <- function(num_threads, url) .Call(wrap__ORTSession__new_from_url, num_threads, url)
+ORTSession$new_from_path <- function(num_threads, path, tokenizer_path) .Call(wrap__ORTSession__new_from_path, num_threads, path, tokenizer_path)
 
-ORTSession$new_from_path <- function(num_threads, path) .Call(wrap__ORTSession__new_from_path, num_threads, path)
-
-ORTSession$run_model <- function(x) invisible(.Call(wrap__ORTSession__run_model, self, x))
+ORTSession$run_model <- function(inputs) .Call(wrap__ORTSession__run_model, self, inputs)
 
 #' @export
 `$.ORTSession` <- function (self, name) { func <- ORTSession[[name]]; environment(func) <- environment(); func }

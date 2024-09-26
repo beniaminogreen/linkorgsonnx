@@ -2,4 +2,7 @@
 
 S3method("$",ORTSession)
 S3method("[[",ORTSession)
+export(inference_session_from_file)
+export(race_models)
+export(run_model)
 useDynLib(linkorgsonnx, .registration = TRUE)
