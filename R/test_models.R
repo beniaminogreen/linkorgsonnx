@@ -6,9 +6,12 @@
 #'
 #' @export
 race_models <- function(model_list, n=1000) {
-
-    data <- sample_n(test_data, n) %>%
+    keys <- unique(test_data$key)
+    sampled_keys <- sample(keys, n)
+    data <- test_data %>%
+        filter(key %in% sampled_keys) %>%
         mutate(idx = row_number())
+
 
     map_dfr(model_list, evaluate_one_model, data = data,.id = "model_name")
 }
@@ -41,7 +44,8 @@ evaluate_one_model <- function(model, data){
                 mean_match_dist = mean(match_df$dist[match_df$match]),
                 mean_non_match_dist = mean(match_df$dist[!match_df$match]),
                 seconds_elapsed = seconds_elapsed,
-                density_plot = list(plot)
+                density_plot = list(plot),
+                n = nrow(data)
             ))
 }
 

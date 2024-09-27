@@ -3,7 +3,7 @@ use extendr_api::prelude::*;
 use std::path::Path;
 
 use ndarray::Array2;
-use ort::{GraphOptimizationLevel, Session, ValueType};
+use ort::{GraphOptimizationLevel, Session, ValueType, CUDAExecutionProvider, CPUExecutionProvider};
 use tokenizers::Tokenizer;
 
 use hnsw_rs::hnsw::Hnsw;
@@ -75,6 +75,8 @@ impl ORTSession {
     fn new_from_path(num_threads: usize, path: &str, tokenizer_path: &str) -> Self {
         let session = Session::builder()
             .expect("Could not build session")
+            .with_execution_providers([CUDAExecutionProvider::default().build(), CPUExecutionProvider::default().build()])
+            .expect("Could not set execution provider priority")
             .with_optimization_level(GraphOptimizationLevel::Level3)
             .expect("could not set optimization level")
             .with_intra_threads(num_threads)

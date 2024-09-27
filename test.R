@@ -2,42 +2,49 @@ library(tidyverse)
 rextendr::document()
 devtools::load_all()
 
-snowflake_session <- inference_session_from_file(
-                                       "_model_stuff/snowflake-arctic-embed-m/model_quantized.onnx",
-                                       "_model_stuff/snowflake-arctic-embed-m/tokenizer.json",
-                                       num_threads = 12
-        )
-gte_tiny_session <- inference_session_from_file(
-                                       "_model_stuff/gte-tiny/model_quantized.onnx",
-                                       "_model_stuff/gte-tiny/tokenizer.json",
-                                       num_threads = 12
-        )
+# snowflake_session <- inference_session_from_file(
+#                                        "_model_stuff/snowflake-arctic-embed-m/model_quantized.onnx",
+#                                        "_model_stuff/snowflake-arctic-embed-m/tokenizer.json",
+#                                        num_threads = 12
+#         )
+# gte_tiny_session <- inference_session_from_file(
+#                                        "_model_stuff/gte-tiny/model_quantized.onnx",
+#                                        "_model_stuff/gte-tiny/tokenizer.json",
+#                                        num_threads = 12
+#         )
 all_MiniLM_L6_v2_session<- inference_session_from_file(
                                        "_model_stuff/all-MiniLM-L6-v2/model.onnx",
                                        "_model_stuff/all-MiniLM-L6-v2/tokenizer.json",
                                        num_threads = 12
         )
-GIST_quantized_session <- inference_session_from_file(
-                                       "_model_stuff/GIST/model_quantized.onnx",
-                                       "_model_stuff/GIST/tokenizer.json",
+fine_tuned <- inference_session_from_file(
+                                       "_model_stuff/fine_tuned_model/test_output/model.onnx",
+                                       "_model_stuff/fine_tuned_model/test_output/tokenizer.json",
                                        num_threads = 12
         )
-GIST_session <- inference_session_from_file(
-                                       "_model_stuff/GIST/model.onnx",
-                                       "_model_stuff/GIST/tokenizer.json",
-                                       num_threads = 12
-        )
+
+# GIST_quantized_session <- inference_session_from_file(
+#                                        "_model_stuff/GIST/model_quantized.onnx",
+#                                        "_model_stuff/GIST/tokenizer.json",
+#                                        num_threads = 12
+#         )
+# GIST_session <- inference_session_from_file(
+#                                        "_model_stuff/GIST/model.onnx",
+#                                        "_model_stuff/GIST/tokenizer.json",
+#                                        num_threads = 12
+#         )
 
 
 test_output_df <- race_models(
             list(
-                 snowflake = snowflake_session,
-                 gte_tiny = gte_tiny_session,
+                 # snowflake = snowflake_session,
+                 # gte_tiny = gte_tiny_session,
                  all_MiniLM_L6_v2 = all_MiniLM_L6_v2_session,
-                 GIST_quantized = GIST_quantized_session,
-                 GIST = GIST_session
+                 fine_tuned = fine_tuned
+                 # GIST_quantized = GIST_quantized_session,
+                 # GIST = GIST_session
             )
-            , n=5000)
+            , n=10)
 
 # test_output_df$seconds_elapsed
 
