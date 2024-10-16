@@ -2,7 +2,12 @@
 
 S3method("$",ORTSession)
 S3method("[[",ORTSession)
+export(generate_embeddings)
+export(neural_anti_join)
+export(neural_full_join)
+export(neural_inner_join)
+export(neural_left_join)
+export(neural_right_join)
 export(new_inference_session)
 export(race_models)
-export(run_model)
 useDynLib(linkorgsonnx, .registration = TRUE)
