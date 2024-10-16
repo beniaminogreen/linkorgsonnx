@@ -18,7 +18,7 @@ race_models <- function(model_list, n=1000) {
 
 evaluate_one_model <- function(model, data){
     t1 <- Sys.time()
-    embeddings <- run_model(model, pull(data, name))
+    embeddings <- generate_embeddings(model, pull(data, name))
     t2 <- Sys.time()
 
     seconds_elapsed <- difftime(t2, t1, units = "secs")

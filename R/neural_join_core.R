@@ -39,7 +39,7 @@ simple_by_validate <- function(a, b, by) {
   ))
 }
 
-neural_join <- function(model,a,b,by, max_dist = .1, exhaustive=FALSE, mode = "full") {
+neural_join <- function(model,a,b,by, radius = .1, exhaustive=FALSE, mode = "full") {
     by <- simple_by_validate(a, b, by)
     by_a <- by[[1]]
     by_b <- by[[2]]
@@ -47,8 +47,8 @@ neural_join <- function(model,a,b,by, max_dist = .1, exhaustive=FALSE, mode = "f
     a_vec <- dplyr::pull(a, by_a)
     b_vec <- dplyr::pull(b, by_b)
 
-    a_embeds <- run_model(model, a_vec)
-    b_embeds <- run_model(model, b_vec)
+    a_embeds <- generate_embeddings(model, a_vec)
+    b_embeds <- generate_embeddings(model, b_vec)
 
 
     if (exhaustive) {

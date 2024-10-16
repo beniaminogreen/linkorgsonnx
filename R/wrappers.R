@@ -25,7 +25,7 @@ new_inference_session <- function(directory, model_name = "model.onnx", tokenize
 #' @param inputs a vector of string inputs you want to calculate the embeddings for
 #'
 #' @export
-run_model <- function(session, inputs, output_index = 0, mean_pooling_needed = FALSE) {
+generate_embeddings <- function(session, inputs, output_index = 0, mean_pooling_needed = FALSE) {
     session$run_model(inputs, output_index, mean_pooling_needed)
 }
 
