@@ -10,10 +10,11 @@ name = 'linkorgsonnx'
 
 [dependencies]
 extendr-api = {version='*', features = ['ndarray']}
-ort = {version = "=2.0.0-rc.4", features = [ "fetch-models" ] }
-ort-sys = {version = "=2.0.0-rc.4"}
-ndarray = "0.15"
-tracing-subscriber = { version = "0.3", default-features = false, features = [ "env-filter", "fmt" ] }
-tokenizers = { version = ">=0.13.4", default-features = false, features = [ "onig" ] }
-rand = "0.8"
 hnsw_rs = "0.3.0"
+ndarray = { version = "0.15.6", features = ["rayon"] }
+ort = {version = "=2.0.0-rc.4", features = [ "fetch-models", "load-dynamic", "cuda" ] }
+ort-sys = {version = "=2.0.0-rc.4"}
+rand = "0.8"
+rayon = "1.6.1"
+tokenizers = { version = ">=0.13.4", default-features = false, features = [ "onig" ] }
+tracing-subscriber = { version = "0.3", default-features = false, features = [ "env-filter", "fmt" ] }

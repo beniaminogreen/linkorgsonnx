@@ -3,11 +3,33 @@ use extendr_api::prelude::*;
 use std::path::Path;
 
 use ndarray::Array2;
-use ort::{GraphOptimizationLevel, Session, ValueType, CUDAExecutionProvider, CPUExecutionProvider};
+use ort::{GraphOptimizationLevel, Session, ValueType, CUDAExecutionProvider};
 use tokenizers::Tokenizer;
 
 use hnsw_rs::hnsw::Hnsw;
 use hnsw_rs::prelude::*;
+
+use rayon::prelude::*;
+
+fn cos_dist(x: ArrayView1<f64>, y : ArrayView1<f64> ) -> f64{
+    let numerator : f64 =  x.iter().zip(y.iter()).map(|(a,b)| a*b).sum();
+    let x_norm : f64 = x.iter().map(|x| x.powi(2)).sum::<f64>().sqrt();
+    let y_norm : f64 = y.iter().map(|y| y.powi(2)).sum::<f64>().sqrt();
+
+    return 1.0-numerator / (x_norm * y_norm)
+}
+
+#[extendr]
+fn multi_cos_distance(a_mat : Robj, b_mat : Robj, indexes : Robj) -> Vec<f64>{
+    let a_mat = <ArrayView2<f64>>::try_from(&a_mat).unwrap().to_owned();
+    let b_mat = <ArrayView2<f64>>::try_from(&b_mat).unwrap().to_owned();
+
+    let indexes = <ArrayView2<i32>>::try_from(&indexes).unwrap().to_owned();
+
+    indexes.axis_iter(Axis(0))
+        .into_par_iter()
+        .map(|x| cos_dist(a_mat.row(x[[0]] as usize -1 ), b_mat.row(x[[1]] as usize -1 ))).collect()
+}
 
 #[extendr]
 fn hnsw_join(a_mat: Robj, b_mat: Robj) -> Robj {
@@ -23,8 +45,6 @@ fn hnsw_join(a_mat: Robj, b_mat: Robj) -> Robj {
     hnsw.parallel_insert(&a_borrow_vec);
     hnsw.set_searching_mode(true);
 
-    hnsw.dump_layer_info();
-
     let b_vec: Vec<Vec<f64>> = b_mat.axis_iter(Axis(0)).map(|row| row.to_vec()).collect();
 
     let results = hnsw.parallel_search(&b_vec,20, 30);
@@ -36,11 +56,11 @@ fn hnsw_join(a_mat: Robj, b_mat: Robj) -> Robj {
         }
     }
 
-    let mut out_arr: Array2<u64> = Array2::zeros((pairs.len(), 2));
+    let mut out_arr: Array2<i32> = Array2::zeros((pairs.len(), 2));
 
     for (idx, (i, j)) in pairs.into_iter().enumerate() {
-        out_arr[[idx, 0]] = i as u64 + 1;
-        out_arr[[idx, 1]] = j as u64 + 1;
+        out_arr[[idx, 0]] = j as i32 + 1;
+        out_arr[[idx, 1]] = i as i32 + 1;
     }
 
     Robj::try_from(&out_arr).into()
@@ -51,36 +71,18 @@ struct ORTSession {
     session: Session,
     tokenizer: Tokenizer,
     embedding_dim: usize,
-    needs_token_types: bool,
-    mean_pooling_needed: bool,
+    needs_token_types: bool
 }
 
 #[extendr]
 impl ORTSession {
-    // fn new_from_url(num_threads: usize, url: &str, tokenizer_path : &str) -> Self {
-    //     let session = Session::builder()
-    //         .expect("Could not build session")
-    //         .with_optimization_level(GraphOptimizationLevel::Level3)
-    //         .expect("could not set optimization level")
-    //         .with_intra_threads(num_threads)
-    //         .expect("could not set # of threads")
-    //         .commit_from_url(url)
-    //         .expect("could not commit from url");
-
-    //     let tokenizer = Tokenizer::from_file(Path::new(tokenizer_path)).unwrap();
-
-    //     Self { session, tokenizer }
-    // }
-
-    fn new_from_path(num_threads: usize, path: &str, tokenizer_path: &str) -> Self {
+    fn new_from_path(path: &str, tokenizer_path: &str) -> Self {
         let session = Session::builder()
             .expect("Could not build session")
-            .with_execution_providers([CUDAExecutionProvider::default().build(), CPUExecutionProvider::default().build()])
+            .with_execution_providers([CUDAExecutionProvider::default().build()]) // , CPUExecutionProvider::default().build()])
             .expect("Could not set execution provider priority")
             .with_optimization_level(GraphOptimizationLevel::Level3)
             .expect("could not set optimization level")
-            .with_intra_threads(num_threads)
-            .expect("could not set # of threads")
             .commit_from_file(path)
             .expect("could not commit from path");
 
@@ -94,24 +96,30 @@ impl ORTSession {
         let tokenizer = Tokenizer::from_file(Path::new(tokenizer_path)).unwrap();
 
         let needs_token_types = session.inputs.len() == 3;
-        let mean_pooling_needed = session.outputs.len() == 1;
 
         Self {
             session,
             tokenizer,
             embedding_dim: embedding_dim,
             needs_token_types,
-            mean_pooling_needed,
         }
     }
 
-    fn run_model(&self, inputs: Strings) -> Robj {
+    fn get_embedding(&self, input : &str) -> Vec<i64> {
+            let encoding = self.tokenizer.encode(input, true).unwrap();
+
+            let ids: Vec<i64> = encoding.get_ids().iter().map(|x| *x as i64).collect();
+
+            ids
+    }
+
+    fn run_model(&self, inputs: Strings, output_index : usize, mean_pooling_needed : bool) -> Robj {
         let mut out_arr: Array2<f32> = Array2::zeros((inputs.len(), self.embedding_dim));
 
         // for (index_chunk, input_chunk) in inputs.iter().enumerate().windows(1000) {
         // }
 
-        let chunk_size = 1000;
+        let chunk_size =   1000;
         for (chunk_index, input_chunk) in inputs.chunks(chunk_size).enumerate() {
             let input_chunk: Vec<String> = input_chunk
                 .iter()
@@ -120,7 +128,7 @@ impl ORTSession {
 
             let input_len = input_chunk.len();
 
-            let encodings = self.tokenizer.encode_batch(input_chunk, false).unwrap();
+            let encodings = self.tokenizer.encode_batch(input_chunk, true).unwrap();
 
             // Get the padded length of each encoding.
             let padded_token_length = encodings
@@ -147,8 +155,7 @@ impl ORTSession {
 
             let a_ids = Array2::from_shape_vec([input_len, padded_token_length], ids).unwrap();
             let a_mask = Array2::from_shape_vec([input_len, padded_token_length], mask).unwrap();
-            let a_type_ids =
-                Array2::from_shape_vec([input_len, padded_token_length], type_ids).unwrap();
+            let a_type_ids = Array2::from_shape_vec([input_len, padded_token_length], type_ids).unwrap();
 
             let (batch_size, seq_len) = a_mask.dim();
             let hidden_size = self.embedding_dim;
@@ -174,16 +181,15 @@ impl ORTSession {
             }
 
             let embeddings;
-            if !self.mean_pooling_needed {
-                embeddings = outputs[1]
+            if mean_pooling_needed {
+                embeddings = outputs[output_index]
                     .try_extract_tensor::<f32>()
                     .unwrap()
                     .into_dimensionality::<Ix2>()
                     .unwrap()
                     .to_owned();
             } else {
-                // embeddings = outputs[1].try_extract_tensor::<f32>().unwrap().into_dimensionality::<Ix2>().unwrap().to_owned();
-                let token_embeddings = outputs[0]
+                let token_embeddings = outputs[output_index]
                     .try_extract_tensor::<f32>()
                     .unwrap()
                     .into_dimensionality::<Ix3>()
@@ -221,4 +227,5 @@ extendr_module! {
     mod linkorgsonnx;
     impl ORTSession;
     fn hnsw_join;
+    fn multi_cos_distance;
 }

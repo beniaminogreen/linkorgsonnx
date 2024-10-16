@@ -12,11 +12,15 @@ NULL
 
 hnsw_join <- function(a_mat, b_mat) .Call(wrap__hnsw_join, a_mat, b_mat)
 
+multi_cos_distance <- function(a_mat, b_mat, indexes) .Call(wrap__multi_cos_distance, a_mat, b_mat, indexes)
+
 ORTSession <- new.env(parent = emptyenv())
 
-ORTSession$new_from_path <- function(num_threads, path, tokenizer_path) .Call(wrap__ORTSession__new_from_path, num_threads, path, tokenizer_path)
+ORTSession$new_from_path <- function(path, tokenizer_path) .Call(wrap__ORTSession__new_from_path, path, tokenizer_path)
 
-ORTSession$run_model <- function(inputs) .Call(wrap__ORTSession__run_model, self, inputs)
+ORTSession$get_embedding <- function(input) .Call(wrap__ORTSession__get_embedding, self, input)
+
+ORTSession$run_model <- function(inputs, output_index, mean_pooling_needed) .Call(wrap__ORTSession__run_model, self, inputs, output_index, mean_pooling_needed)
 
 #' @export
 `$.ORTSession` <- function (self, name) { func <- ORTSession[[name]]; environment(func) <- environment(); func }

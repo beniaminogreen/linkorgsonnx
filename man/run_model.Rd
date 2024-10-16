@@ -4,7 +4,7 @@
 \alias{run_model}
 \title{Run a Model on Given Inputs}
 \usage{
-run_model(session, inputs)
+run_model(session, inputs, output_index = 0, mean_pooling_needed = FALSE)
 }
 \arguments{
 \item{session}{an Inference Session object}

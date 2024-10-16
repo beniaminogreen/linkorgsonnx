@@ -11,8 +11,10 @@
 #' @param num_thread number of threads for inference to run on (default 1)
 #'
 #' @export
-inference_session_from_file <- function(model_path,tokenizer_path,  num_threads = 1) {
-    ORTSession$new_from_path(num_threads,model_path, tokenizer_path)
+new_inference_session <- function(directory, model_name = "model.onnx", tokenizer_name = "tokenizer.json") {
+    model_path <- file.path(directory, model_name)
+    tokenizer_path <- file.path(directory, tokenizer_name)
+    ORTSession$new_from_path(model_path, tokenizer_path)
 }
 
 
@@ -23,7 +25,7 @@ inference_session_from_file <- function(model_path,tokenizer_path,  num_threads 
 #' @param inputs a vector of string inputs you want to calculate the embeddings for
 #'
 #' @export
-run_model <- function(session, inputs) {
-    session$run_model(inputs)
+run_model <- function(session, inputs, output_index = 0, mean_pooling_needed = FALSE) {
+    session$run_model(inputs, output_index, mean_pooling_needed)
 }
 
