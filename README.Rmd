@@ -10,7 +10,6 @@ always_allow_html: true
 
 `linkorgsonnx` is an R package that allows you to join datasets using neural networks in R.
 
-
 # Installation
 
 ## Prerequisites:
@@ -20,7 +19,20 @@ To use the development version of the package, you must have the following insta
 1. [Cargo](https://www.rust-lang.org/tools/install), the package manager for Rust
 2. The [ONNX Runtime](https://www.onnxruntime.ai), needed for running the neural networks.
 
-Installation for both should require copying a few commands in your terminal. If you are looking to run the models on a GPU, please make sure that you install the relevant GPU version.
+Installation for both should require copying a few commands in your terminal.
+If you are looking to run the models on a GPU, please make sure that you
+install the relevant GPU version. Please see the following note reguarding a
+common issue compiling packages using Rust on Windows.
+
+#### Installing Rust on Windows:
+
+To install Rust on windows, you can use the Rust installation wizard, `rustup-init.exe`, found [at this site](https://forge.rust-lang.org/infra/other-installation-methods.html). Depending on your version of Windows, you are likely to see an error that looks something like the following when you try and compile the package:
+
+```
+error: toolchain 'stable-x86_64-pc-windows-gnu' is not installed
+```
+
+In this case, you should run `rustup install stable-x86_64-pc_windows-gnu` to install the missing toolchain. If you're missing another toolchain, simply type this in the place of `stable-x86_64-pc_windows-gnu` in the command above.
 
 ## Installing from GitHub
 
