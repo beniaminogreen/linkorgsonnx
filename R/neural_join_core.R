@@ -1,10 +1,3 @@
-# library(tidyverse)
-
-# rextendr::document()
-# devtools::load_all()
-
-# Sys.setenv(ORT_DYLIB_PATH = "/nix/store/ifqds33j9scpwyiks89g86rqb1cqzhvc-onnxruntime-1.18.1/lib/libonnxruntime.so")
-
 simple_by_validate <- function(a, b, by) {
   # first pass to handle dplyr::join_by() call
   if (inherits(by, "dplyr_join_by")) {
@@ -39,7 +32,12 @@ simple_by_validate <- function(a, b, by) {
   ))
 }
 
-neural_join <- function(model,a,b,by, radius = .1, exhaustive=FALSE, mode = "full") {
+#'
+#'
+#'
+#'
+#'
+neural_join_core <- function(model,a,b,by, radius = .1, exhaustive=FALSE, mode = "full", ...) {
     by <- simple_by_validate(a, b, by)
     by_a <- by[[1]]
     by_b <- by[[2]]
@@ -47,8 +45,8 @@ neural_join <- function(model,a,b,by, radius = .1, exhaustive=FALSE, mode = "ful
     a_vec <- dplyr::pull(a, by_a)
     b_vec <- dplyr::pull(b, by_b)
 
-    a_embeds <- generate_embeddings(model, a_vec)
-    b_embeds <- generate_embeddings(model, b_vec)
+    a_embeds <- generate_embeddings(model, a_vec, ...)
+    b_embeds <- generate_embeddings(model, b_vec, ...)
 
 
     if (exhaustive) {
@@ -59,10 +57,10 @@ neural_join <- function(model,a,b,by, radius = .1, exhaustive=FALSE, mode = "ful
 
     dist <- multi_cos_distance(a_embeds, b_embeds, match_table)
 
-    within_dist <- dist < max_dist
+      within_dist <- dist < max_dist
 
-    dist <- dist[within_dist]
-    match_table <- match_table[within_dist, ]
+      dist <- dist[within_dist]
+      match_table <- match_table[within_dist, ]
 
 
 
