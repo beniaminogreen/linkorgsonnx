@@ -18,7 +18,7 @@ new_inference_session <- function(directory, model_name = "model.onnx", tokenize
 }
 
 
-#' Run a Model on Given Inputs
+#' Generate Embeddings
 #'
 #' @param session an Inference Session object
 #'

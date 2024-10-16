@@ -2,7 +2,7 @@
 % Please edit documentation in R/wrappers.R
 \name{generate_embeddings}
 \alias{generate_embeddings}
-\title{Run a Model on Given Inputs}
+\title{Generate Embeddings}
 \usage{
 generate_embeddings(
   session,
@@ -17,5 +17,5 @@ generate_embeddings(
 \item{inputs}{a vector of string inputs you want to calculate the embeddings for}
 }
 \description{
-Run a Model on Given Inputs
+Generate Embeddings
 }
