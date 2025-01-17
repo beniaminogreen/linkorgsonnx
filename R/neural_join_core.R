@@ -1,3 +1,13 @@
+#' Validate that `by` columns are valid
+#'
+#' This code is taken from the `zoomerjoin` package for R. Please see:
+#'
+#' Green B (2024). _zoomerjoin: Superlatively Fast Fuzzy Joins_. R
+#'    package version 0.2.0,
+#'    <https://CRAN.R-project.org/package=zoomerjoin>.
+#'
+#' For more details
+#'
 simple_by_validate <- function(a, b, by) {
   # first pass to handle dplyr::join_by() call
   if (inherits(by, "dplyr_join_by")) {
@@ -32,9 +42,14 @@ simple_by_validate <- function(a, b, by) {
   ))
 }
 
+#' Core for the Neural Join Functions
 #'
+#' This code is adapted from code the `zoomerjoin` package for R, specifically the jaccard_join_core funtion.
+#' For more details, please see:
 #'
-#'
+#' Green B (2024). _zoomerjoin: Superlatively Fast Fuzzy Joins_. R
+#'    package version 0.2.0,
+#'    <https://CRAN.R-project.org/package=zoomerjoin>.
 #'
 #'
 neural_join_core <- function(model, a, b, by, radius = .1, exhaustive = FALSE, mode = "full", ...) {

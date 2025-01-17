@@ -14,7 +14,16 @@
 new_inference_session <- function(directory, model_name = "model.onnx", tokenizer_name = "tokenizer.json") {
     model_path <- file.path(directory, model_name)
     tokenizer_path <- file.path(directory, tokenizer_name)
-    ORTSession$new_from_path(model_path, tokenizer_path)
+    ort_session_pointer <- ORTSession$new_from_path(model_path, tokenizer_path)
+
+    output <- list(
+                   ort_session_pointer = ort_session_pointer,
+                   model_path = model_path,
+                   tokenizer_path = tokenizer_path
+                   )
+    class(output) <- "ort_session"
+
+    return(output)
 }
 
 
@@ -26,6 +35,13 @@ new_inference_session <- function(directory, model_name = "model.onnx", tokenize
 #'
 #' @export
 generate_embeddings <- function(session, inputs, output_index = 0, mean_pooling_needed = FALSE) {
-    session$run_model(inputs, output_index, mean_pooling_needed)
+    session$ort_session_pointer$run_model(inputs, output_index, mean_pooling_needed)
 }
 
+
+#' @export
+print.ort_session <- function(x, ...) {
+    cat("An ORT inference session\n")
+    cat("Using the model found at:\n\t", x$model_path, "\n")
+    cat("And the tokenizer found at:\n\t", x$tokenizer_path, "\n")
+}

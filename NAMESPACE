@@ -2,6 +2,7 @@
 
 S3method("$",ORTSession)
 S3method("[[",ORTSession)
+S3method(print,ort_session)
 export(generate_embeddings)
 export(neural_anti_join)
 export(neural_full_join)

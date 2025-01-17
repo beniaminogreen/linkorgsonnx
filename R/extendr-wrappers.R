@@ -18,8 +18,6 @@ ORTSession <- new.env(parent = emptyenv())
 
 ORTSession$new_from_path <- function(path, tokenizer_path) .Call(wrap__ORTSession__new_from_path, path, tokenizer_path)
 
-ORTSession$get_embedding <- function(input) .Call(wrap__ORTSession__get_embedding, self, input)
-
 ORTSession$run_model <- function(inputs, output_index, mean_pooling_needed) .Call(wrap__ORTSession__run_model, self, inputs, output_index, mean_pooling_needed)
 
 #' @export

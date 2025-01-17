@@ -2,10 +2,20 @@
 #'
 #' @param model_list a named list of different inference sessions you would
 #' like to compare
+#' @param data a dataframe to use in the testing. has to conform with the
+#' format of the 'test_data' dataframe included in the package. If no data is
+#' provided, the built-in testing dataset will be used.
 #' @param n the size of the dataset used for evaluation.
 #'
 #' @export
-race_models <- function(model_list, n=1000) {
+race_models <- function(model_list, data = NULL, n=1000) {
+
+    if (is.null(data)) {
+        test_data <- test_data
+    } else {
+        test_data <- data
+    }
+
     keys <- unique(test_data$key)
     sampled_keys <- sample(keys, n)
     data <- test_data %>%
