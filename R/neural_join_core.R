@@ -37,7 +37,7 @@ simple_by_validate <- function(a, b, by) {
 #'
 #'
 #'
-neural_join_core <- function(model,a,b,by, radius = .1, exhaustive=FALSE, mode = "full", ...) {
+neural_join_core <- function(model, a, b, by, radius = .1, exhaustive = FALSE, mode = "full", ...) {
     by <- simple_by_validate(a, b, by)
     by_a <- by[[1]]
     by_b <- by[[2]]
@@ -48,7 +48,6 @@ neural_join_core <- function(model,a,b,by, radius = .1, exhaustive=FALSE, mode =
     a_embeds <- generate_embeddings(model, a_vec, ...)
     b_embeds <- generate_embeddings(model, b_vec, ...)
 
-
     if (exhaustive) {
         match_table <- grid.expand(seq(length(a_vec)), seq(length(b_vec)))
     } else {
@@ -57,48 +56,51 @@ neural_join_core <- function(model,a,b,by, radius = .1, exhaustive=FALSE, mode =
 
     dist <- multi_cos_distance(a_embeds, b_embeds, match_table)
 
-      within_dist <- dist < max_dist
+    max_dist <- radius
+    within_dist <- dist < max_dist
 
-      dist <- dist[within_dist]
-      match_table <- match_table[within_dist, ]
+    dist <- dist[within_dist]
+    match_table <- match_table[within_dist, ]
 
-
-
-      # Rename Columns in Both Tables
-      names_in_both <- intersect(names(a), names(b))
-      names(a)[names(a) %in% names_in_both] <- paste0(names(a)[names(a) %in% names_in_both], ".x")
-      names(b)[names(b) %in% names_in_both] <- paste0(names(b)[names(b) %in% names_in_both], ".y")
-
-      matches <- dplyr::bind_cols(a[match_table[, 1], ], b[match_table[, 2], ])
-      matches$dist <- dist
-
-
-
-  # No need to look for rows that don't match
-  if (mode == "inner") {
-    return(matches)
-  }
-
-  switch(mode,
-    "left" = {
-      not_matched_a <- collapse::`%!iin%`(seq(nrow(a)), match_table[, 1])
-      matches <- dplyr::bind_rows(matches, a[not_matched_a, ])
-    },
-    "right" = {
-      not_matched_b <- collapse::`%!iin%`(seq(nrow(b)), match_table[, 2])
-      matches <- dplyr::bind_rows(matches, b[not_matched_b, ])
-    },
-    "full" = {
-      not_matched_a <- collapse::`%!iin%`(seq(nrow(a)), match_table[, 1])
-      not_matched_b <- collapse::`%!iin%`(seq(nrow(b)), match_table[, 2])
-      matches <- dplyr::bind_rows(matches, a[not_matched_a, ], b[not_matched_b, ])
-    },
-    "anti" = {
-      not_matched_a <- collapse::`%!iin%`(seq(nrow(a)), match_table[, 1])
-      not_matched_b <- collapse::`%!iin%`(seq(nrow(b)), match_table[, 2])
-      matches <- dplyr::bind_rows(a[not_matched_a, ], b[not_matched_b, ])
+    # Check if match_table is empty
+    if (is.null(dim(match_table)) || nrow(match_table) == 0) {
+        warning("No matches found within the specified radius of ", max_dist)
+        return(dplyr::tibble())  # Return an empty tibble or handle as needed
     }
-  )
 
-  matches
+    # Rename Columns in Both Tables
+    names_in_both <- intersect(names(a), names(b))
+    names(a)[names(a) %in% names_in_both] <- paste0(names(a)[names(a) %in% names_in_both], ".x")
+    names(b)[names(b) %in% names_in_both] <- paste0(names(b)[names(b) %in% names_in_both], ".y")
+
+    matches <- dplyr::bind_cols(a[match_table[, 1], ], b[match_table[, 2], ])
+    matches$dist <- dist
+
+    if (mode == "inner") {
+        return(matches)
+    }
+
+    switch(mode,
+        "left" = {
+            not_matched_a <- which(!(seq(nrow(a)) %in% match_table[, 1]))
+            matches <- dplyr::bind_rows(matches, a[not_matched_a, ])
+        },
+        "right" = {
+            not_matched_b <- which(!(seq(nrow(b)) %in% match_table[, 2]))
+            matches <- dplyr::bind_rows(matches, b[not_matched_b, ])
+        },
+        "full" = {
+            not_matched_a <- which(!(seq(nrow(a)) %in% match_table[, 1]))
+            not_matched_b <- which(!(seq(nrow(b)) %in% match_table[, 2]))
+            matches <- dplyr::bind_rows(matches, a[not_matched_a, ], b[not_matched_b, ])
+        },
+        "anti" = {
+            not_matched_a <- which(!(seq(nrow(a)) %in% match_table[, 1]))
+            not_matched_b <- which(!(seq(nrow(b)) %in% match_table[, 2]))
+            matches <- dplyr::bind_rows(a[not_matched_a, ], b[not_matched_b, ])
+        }
+    )
+
+    matches
 }
+
